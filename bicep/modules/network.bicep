@@ -1,8 +1,12 @@
-param name string
-param location string
+import { environmentType, locationType, networkType } from '../types.bicep'
+import { getResourceName } from '../functions.bicep'
 
-var nsgName = 'nsg-${name}'
-var vnetName = 'vnet-${name}'
+param env environmentType
+param location locationType
+param network networkType
+
+var nsgName = getResourceName('NetworkSecurityGroup', env, location, null, null)
+var vnetName = getResourceName('VirtualNetwork', env, location, null, null)
 
 resource nsg 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
   name: nsgName
@@ -32,14 +36,14 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        '172.17.0.0/16'
+        network.ipRange
       ]
     }
     subnets: [
       {
-        name: 'vm-build'
+        name: network.vmSubnet.name
         properties: {
-          addressPrefix: '172.17.0.0/24'
+          addressPrefix: network.vmSubnet.ipRange
           networkSecurityGroup: {
             id: nsg.id
           }
@@ -47,18 +51,18 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
         }
       }
       {
-        name: 'container-build'
+        name: network.containerSubnet.name
         properties: {
-          addressPrefix: '172.17.1.0/24'
+          addressPrefix: network.containerSubnet.ipRange
           networkSecurityGroup: {
             id: nsg.id
           }
           privateLinkServiceNetworkPolicies: 'Disabled'
           delegations: [
             {
-              name: 'container-build'
+              name: network.containerSubnet.name
               properties: {
-                serviceName: 'Microsoft.ContainerInstance/containerGroups'
+                serviceName: network.containerSubnet.serviceName!
               }
             }
           ]
@@ -66,4 +70,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
       }
     ]
   }
+
+  resource vmSubnet 'subnets' existing = {
+    name: network.vmSubnet.name
+  }
+
+  resource containerSubnet 'subnets' existing = {
+    name: network.containerSubnet.name
+  }
 }
+
+output vmSubnetId string = vnet::vmSubnet.id
+output containerSubnetId string = vnet::containerSubnet.id

@@ -1,7 +1,11 @@
-param name string
-param location string
+import * as const from '../constants.bicep'
+import { environmentType, locationType } from '../types.bicep'
+import { getResourceName } from '../functions.bicep'
 
-var identityName = 'id-${name}'
+param env environmentType
+param location locationType
+
+var identityName = getResourceName('ManagedIdentity', env, location, null, null)
 
 resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: identityName
@@ -9,11 +13,11 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' 
 }
 
 resource networkRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '4d97b98b-1d4f-4787-a291-c67834d212e7'
+  name: const.networkRole
 }
 
 resource galleryRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
-  name: '85a2d0d9-2eba-4c9c-b355-11c2cc0788ab'
+  name: const.galleryRole
 }
 
 resource networkRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -35,3 +39,5 @@ resource galleryRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalType: 'ServicePrincipal'
   }
 }
+
+output id string = identity.id

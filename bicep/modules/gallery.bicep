@@ -1,7 +1,10 @@
-param name string
-param location string
+import { environmentType, locationType } from '../types.bicep'
+import { getResourceName } from '../functions.bicep'
 
-var galleryName = replace('gal-${name}', '-', '_')
+param env environmentType
+param location locationType
+
+var galleryName = getResourceName('Gallery', env, location, null, null)
 
 resource gallery 'Microsoft.Compute/galleries@2024-03-03' = {
   name: galleryName
@@ -43,3 +46,5 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' = {
     }
   }
 }
+
+output imageId string = gallery::windowsImage.id

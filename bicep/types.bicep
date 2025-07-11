@@ -1,12 +1,13 @@
 @export()
 type environmentType = 
   | 'prod'
+  | 'test'
   | 'dev'
 
 @export()
 type locationType = 
-  | 'westeurope'
   | 'swedencentral'
+  | 'westeurope'
 
 @export()
 type resourceType =
@@ -16,3 +17,17 @@ type resourceType =
   | 'ManagedIdentity'
   | 'Gallery'
   | 'ImageTemplate'
+
+@export()
+type networkType = {
+  ipRange: string
+  vmSubnet: subnetType
+  containerSubnet: subnetType
+}
+
+@export()
+type subnetType = {
+  name: string
+  ipRange: string
+  serviceName: string?
+}
