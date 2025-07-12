@@ -19,15 +19,16 @@ type resourceType =
   | 'ImageTemplate'
 
 @export()
-type networkType = {
-  ipRange: string
-  vmSubnet: subnetType
-  containerSubnet: subnetType
-}
-
-@export()
 type subnetType = {
   name: string
   ipRange: string
   serviceName: string?
+}
+
+@export()
+type imageType = {
+  publisher: string
+  offer: string
+  sku: string
+  version: string?
 }

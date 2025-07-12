@@ -1,9 +1,10 @@
-import { environmentType, locationType, networkType } from '../types.bicep'
+import { environmentType, locationType, subnetType } from '../types.bicep'
 import { getResourceName } from '../functions.bicep'
 
 param env environmentType
 param location locationType
-param network networkType
+param vnetIpRange string
+param subnets subnetType[]
 
 var nsgName = getResourceName('NetworkSecurityGroup', env, location, null, null)
 var vnetName = getResourceName('VirtualNetwork', env, location, null, null)
@@ -36,33 +37,23 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   properties: {
     addressSpace: {
       addressPrefixes: [
-        network.ipRange
+        vnetIpRange
       ]
     }
     subnets: [
-      {
-        name: network.vmSubnet.name
+      for subnet in subnets: {
+        name: subnet.name
         properties: {
-          addressPrefix: network.vmSubnet.ipRange
+          addressPrefix: subnet.ipRange
           networkSecurityGroup: {
             id: nsg.id
           }
           privateLinkServiceNetworkPolicies: 'Disabled'
-        }
-      }
-      {
-        name: network.containerSubnet.name
-        properties: {
-          addressPrefix: network.containerSubnet.ipRange
-          networkSecurityGroup: {
-            id: nsg.id
-          }
-          privateLinkServiceNetworkPolicies: 'Disabled'
-          delegations: [
+          delegations: empty(subnet.serviceName!) ? [] : [
             {
-              name: network.containerSubnet.name
+              name: subnet.name
               properties: {
-                serviceName: network.containerSubnet.serviceName!
+                serviceName: subnet.serviceName!
               }
             }
           ]
@@ -70,15 +61,4 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
       }
     ]
   }
-
-  resource vmSubnet 'subnets' existing = {
-    name: network.vmSubnet.name
-  }
-
-  resource containerSubnet 'subnets' existing = {
-    name: network.containerSubnet.name
-  }
 }
-
-output vmSubnetId string = vnet::vmSubnet.id
-output containerSubnetId string = vnet::containerSubnet.id

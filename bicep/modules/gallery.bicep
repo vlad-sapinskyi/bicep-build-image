@@ -1,8 +1,9 @@
-import { environmentType, locationType } from '../types.bicep'
+import { environmentType, locationType, imageType } from '../types.bicep'
 import { getResourceName } from '../functions.bicep'
 
 param env environmentType
 param location locationType
+param targetImage imageType
 
 var galleryName = getResourceName('Gallery', env, location, null, null)
 
@@ -10,8 +11,8 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' = {
   name: galleryName
   location: location
 
-  resource windowsImage 'images@2024-03-03' = {
-    name: 'windows'
+  resource image 'images@2024-03-03' = {
+    name: targetImage.sku
     location: location
     properties: {
       hyperVGeneration: 'V2'
@@ -29,9 +30,9 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' = {
       osType: 'Windows'
       osState: 'Generalized'
       identifier: {
-        publisher: 'SimCorp'
-        offer: 'SimCity'
-        sku: 'TeamCity-Default-Agent-Windows'
+        publisher: targetImage.publisher
+        offer: targetImage.offer
+        sku: targetImage.sku
       }
       recommended: {
         vCPUs: {
@@ -46,5 +47,3 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' = {
     }
   }
 }
-
-output imageId string = gallery::windowsImage.id

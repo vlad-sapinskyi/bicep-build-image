@@ -7,17 +7,17 @@ param location locationType
 
 var identityName = getResourceName('ManagedIdentity', env, location, null, null)
 
-resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
-  name: identityName
-  location: location
-}
-
 resource networkRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: const.networkRole
 }
 
 resource galleryRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
   name: const.galleryRole
+}
+
+resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
+  name: identityName
+  location: location
 }
 
 resource networkRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
@@ -39,5 +39,3 @@ resource galleryRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-
     principalType: 'ServicePrincipal'
   }
 }
-
-output id string = identity.id

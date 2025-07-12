@@ -1,11 +1,13 @@
 targetScope = 'subscription'
 
-import { environmentType, locationType, networkType } from '../types.bicep'
+import { environmentType, locationType, subnetType, imageType } from '../types.bicep'
 import { getResourceName, getModuleFullName } from '../functions.bicep'
 
 param env environmentType
 param location locationType
-param network networkType
+param vnetIpRange string
+param subnets subnetType[]
+param targetImage imageType
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
 
@@ -20,7 +22,8 @@ module networkModule '../modules/network.bicep' = {
   params: {
     env: env
     location: location
-    network: network
+    vnetIpRange: vnetIpRange
+    subnets: subnets
   }
 }
 
@@ -30,6 +33,7 @@ module galleryModule '../modules/gallery.bicep' = {
   params: {
     env: env
     location: location
+    targetImage: targetImage
   }
 }
 
@@ -39,18 +43,5 @@ module identityModule '../modules/identity.bicep' = {
   params: {
     env: env
     location: location
-  }
-}
-
-module imageTemplateModule '../modules/image-template.bicep' = {
-  name: getModuleFullName('image-template', env, location, null)
-  scope: rg
-  params: {
-    env: env
-    location: location
-    identityId: identityModule.outputs.id
-    vmSubnetId: networkModule.outputs.vmSubnetId
-    containerSubnetId: networkModule.outputs.containerSubnetId
-    imageId: galleryModule.outputs.imageId
   }
 }
