@@ -1,0 +1,26 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      - name: Bicep Build (main)
+        uses: Azure/bicep-build-action@v1.0.0
+        with:
+          bicepFilePath: ./bicep/workloads/main.bicep
+
+      - name: Bicep Build (image-builder)
+        uses: Azure/bicep-build-action@v1.0.0
+        with:
+          bicepFilePath: ./bicep/workloads/image-builder.bicep
