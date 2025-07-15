@@ -12,9 +12,14 @@ param targetImageDefinitionName string
 param imageActions imageActionType[]
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
+var rgStageName = getResourceName('ResourceGroup', env, location, null, 'stage')
 
 resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' existing = {
   name: rgName
+}
+
+resource rgStage 'Microsoft.Resources/resourceGroups@2025-04-01' existing = {
+  name: rgStageName
 }
 
 module imageTemplateModule '../modules/image-template.bicep' = {
@@ -23,6 +28,7 @@ module imageTemplateModule '../modules/image-template.bicep' = {
   params: {
     env: env
     location: location
+    rgStageId: rgStage.id
     vmSubnetName: vmSubnetName
     containerSubnetName: containerSubnetName
     targetImageDefinitionName: targetImageDefinitionName

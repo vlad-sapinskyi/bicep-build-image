@@ -3,6 +3,7 @@ import { getResourceName, combineScript } from '../functions.bicep'
 
 param env environmentType
 param location locationType
+param rgStageId string
 param vmSubnetName string
 param containerSubnetName string
 param sourceImageDefinition imageDefinitionType
@@ -62,6 +63,7 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2024-02-01
       sku: sourceImageDefinition.sku
       version: sourceImageDefinition.version!
     }
+    stagingResourceGroup: rgStageId
     customize: [
       for action in imageActions: action.type == 'RunScript'
         ? sourceImageDefinition.os == 'Windows'

@@ -10,9 +10,15 @@ param subnets subnetType[]
 param imageDefinitions imageDefinitionType[]
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
+var rgStageName = getResourceName('ResourceGroup', env, location, null, 'stage')
 
 resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: rgName
+  location: location
+}
+
+resource rgStage 'Microsoft.Resources/resourceGroups@2025-04-01' = {
+  name: rgStageName
   location: location
 }
 
