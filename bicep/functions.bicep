@@ -34,6 +34,17 @@ func getModuleFullName(name string, env environmentType, location locationType, 
     ), '-'
   )
 
+@export()
+func combineScript(scriptContent string) string =>
+  join(
+    filter(
+      split(scriptContent, [
+        '\r\n'
+      ]),
+      value => !empty(value)
+    ), '; '
+  )
+
 func trimResourceName(res resourceType, name string) string =>
   (res == 'Gallery') ? replace(name, '-', '_') : name
 

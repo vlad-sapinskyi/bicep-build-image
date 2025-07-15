@@ -1,14 +1,15 @@
 targetScope = 'subscription'
 
-import { environmentType, locationType, imageType } from '../types.bicep'
+import { environmentType, locationType, imageDefinitionType, imageActionType } from '../types.bicep'
 import { getResourceName, getModuleFullName } from '../functions.bicep'
 
 param env environmentType
 param location locationType
 param vmSubnetName string
 param containerSubnetName string
-param sourceImage imageType
-param targetImageName string
+param sourceImageDefinition imageDefinitionType
+param targetImageDefinitionName string
+param imageActions imageActionType[]
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
 
@@ -24,7 +25,8 @@ module imageTemplateModule '../modules/image-template.bicep' = {
     location: location
     vmSubnetName: vmSubnetName
     containerSubnetName: containerSubnetName
-    sourceImage: sourceImage
-    targetImageName: targetImageName
+    targetImageDefinitionName: targetImageDefinitionName
+    sourceImageDefinition: sourceImageDefinition
+    imageActions: imageActions
   }
 }

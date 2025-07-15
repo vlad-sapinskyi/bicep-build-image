@@ -41,7 +41,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
       ]
     }
     subnets: [
-      for subnet in subnets: {
+      for subnet in subnets: empty(subnet.serviceName!) ? {
         name: subnet.name
         properties: {
           addressPrefix: subnet.ipRange
@@ -49,7 +49,16 @@ resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' = {
             id: nsg.id
           }
           privateLinkServiceNetworkPolicies: 'Disabled'
-          delegations: empty(subnet.serviceName!) ? [] : [
+        }
+      } : {
+        name: subnet.name
+        properties: {
+          addressPrefix: subnet.ipRange
+          networkSecurityGroup: {
+            id: nsg.id
+          }
+          privateLinkServiceNetworkPolicies: 'Disabled'
+          delegations: [
             {
               name: subnet.name
               properties: {
