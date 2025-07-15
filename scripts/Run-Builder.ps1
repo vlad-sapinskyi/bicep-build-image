@@ -2,6 +2,11 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
+    [ValidateSet('Windows', 'Linux')]
+    [string] $ImageType,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateNotNullOrEmpty()]
     [ValidateSet('Dev', 'Test', 'Prod')]
     [string] $Environment,
 
@@ -13,14 +18,13 @@ process {
     # Set application name
     $appName = 'build-image'
 
-    # Set workload name
-    $workloadName = 'main'
+    # Set image type
+    $imageType = $ImageType.ToLower()
 
     # Set environment name
     $envName = $Environment.ToLower()
 
     # Set deployment location name
-    $locationName = $Location.ToLower()
     $locationShortName = 'sdc'
     if ('WestEurope' -eq $Location) {
         $locationShortName = 'we'
@@ -38,12 +42,13 @@ process {
         }
         Write-Host ($account | Format-List | Out-String)
 
-        # Deploy selected workload
-        $deploymentName = "$appName-$workloadName-$envName-$locationShortName"
-        $deploymentTemplateParameterFile = ".\bicep\workloads\$workloadName-$envName.bicepparam"
-        $deploymentTemplateFile = ".\bicep\workloads\$workloadName.bicep" 
-        Write-Host "`nDeploying '$workloadName' workload ...`n" -ForegroundColor Green
-        az deployment sub create --name $deploymentName --location $locationName --template-file $deploymentTemplateFile --parameters $deploymentTemplateParameterFile
+        # Run image template
+        $rgName = "rg-$appName-$envName-$locationShortName"
+        $imageTemplateName = "it-$appName-$envName-$locationShortName"
+        Write-Host "`nRunning '$imageTemplateName' image template ...`n" -ForegroundColor Green
+        az image builder run --name $imageTemplateName --resource-group $rgName --no-wait
+        az image builder wait --name $imageTemplateName --resource-group $rgName --custom "lastRunStatus.runState!='Running'"
+        az image builder show --name $imageTemplateName --resource-group $rgName
 
         Write-Host "`nDone!`n" -ForegroundColor Green
     }
