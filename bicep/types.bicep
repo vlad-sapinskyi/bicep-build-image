@@ -26,9 +26,17 @@ type subnetType = {
 }
 
 @export()
-type imageType = {
+type imageDefinitionType = {
+  os: 'Windows' | 'Linux'
   publisher: string
   offer: string
   sku: string
   version: string?
+}
+
+@export()
+type imageActionType = {
+  type: 'RunScript' | 'Restart'
+  name: string
+  script: string?
 }

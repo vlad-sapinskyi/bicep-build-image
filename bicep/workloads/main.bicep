@@ -1,13 +1,13 @@
 targetScope = 'subscription'
 
-import { environmentType, locationType, subnetType, imageType } from '../types.bicep'
+import { environmentType, locationType, subnetType, imageDefinitionType } from '../types.bicep'
 import { getResourceName, getModuleFullName } from '../functions.bicep'
 
 param env environmentType
 param location locationType
 param vnetIpRange string
 param subnets subnetType[]
-param targetImage imageType
+param imageDefinitions imageDefinitionType[]
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
 
@@ -33,7 +33,7 @@ module galleryModule '../modules/gallery.bicep' = {
   params: {
     env: env
     location: location
-    targetImage: targetImage
+    imageDefinitions: imageDefinitions
   }
 }
 

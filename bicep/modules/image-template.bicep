@@ -1,12 +1,13 @@
-import { environmentType, locationType, imageType } from '../types.bicep'
-import { getResourceName } from '../functions.bicep'
+import { environmentType, locationType, imageDefinitionType, imageActionType } from '../types.bicep'
+import { getResourceName, combineScript } from '../functions.bicep'
 
 param env environmentType
 param location locationType
 param vmSubnetName string
 param containerSubnetName string
-param sourceImage imageType
-param targetImageName string
+param sourceImageDefinition imageDefinitionType
+param targetImageDefinitionName string
+param imageActions imageActionType[]
 
 var vnetName = getResourceName('VirtualNetwork', env, location, null, null)
 var galleryName = getResourceName('Gallery', env, location, null, null)
@@ -29,7 +30,7 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' existing = {
   name: galleryName
 
   resource image 'images@2024-03-03' existing = {
-    name: targetImageName
+    name: targetImageDefinitionName
   }
 }
 
@@ -56,53 +57,36 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2024-02-01
     }
     source: {
       type: 'PlatformImage'
-      publisher: sourceImage.publisher
-      offer: sourceImage.offer
-      sku: sourceImage.sku
-      version: sourceImage.version!
+      publisher: sourceImageDefinition.publisher
+      offer: sourceImageDefinition.offer
+      sku: sourceImageDefinition.sku
+      version: sourceImageDefinition.version!
     }
     customize: [
-      {
-        type: 'PowerShell'
-        name: 'enable-containers'
-        inline: [
-          'Install-WindowsFeature -Name \'Containers\''
-        ]
-        runElevated: true
-        runAsSystem: true
-      }
-      {
-        type: 'PowerShell'
-        name: 'enable-nested-virtualization'
-        inline: [
-          'bcdedit /set hypervisorlaunchtype auto'
-        ]
-        runElevated: true
-        runAsSystem: true
-      }
-      {
-        type: 'WindowsRestart'
-        name: 'restart-01'
-      }
-      {
-        type: 'PowerShell'
-        name: 'enable-hyper-v'
-        inline: [
-          'Install-WindowsFeature -Name \'Hyper-V\''
-        ]
-        runElevated: true
-        runAsSystem: true
-      }
-      {
-        type: 'WindowsRestart'
-        name: 'restart-02'
-      }
+      for action in imageActions: action.type == 'RunScript'
+        ? sourceImageDefinition.os == 'Windows'
+            ? {
+                type: 'PowerShell'
+                name: action.name
+                inline: [combineScript(action.script!)]
+                runAsSystem: true
+                runElevated: true
+              }
+            : {
+                type: 'Shell'
+                name: action.name
+                inline: [combineScript(action.script!)]
+              }
+        : {
+            type: 'WindowsRestart'
+            name: action.name
+          }
     ]
     distribute: [
       {
         type: 'SharedImage'
         galleryImageId: gallery::image.id
-        runOutputName: targetImageName
+        runOutputName: targetImageDefinitionName
         replicationRegions: [
           location
         ]
