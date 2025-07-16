@@ -1,6 +1,5 @@
 import { environmentType, locationType, imageDefinitionType } from '../types.bicep'
 import { getResourceName } from '../functions.bicep'
-import * as customization from '../customizations.bicep'
 
 param env environmentType
 param location locationType
@@ -8,6 +7,7 @@ param vmSubnetName string
 param containerSubnetName string
 param sourceImageDefinition imageDefinitionType
 param targetImageDefinitionName string
+param customization object[]?
 
 var identityName = getResourceName('ManagedIdentity', env, location, null, null)
 var vnetName = getResourceName('VirtualNetwork', env, location, null, null)
@@ -62,7 +62,7 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2024-02-01
       sku: sourceImageDefinition.sku
       version: sourceImageDefinition.version!
     }
-    customize: sourceImageDefinition.os == 'Windows' ? customization.windows : customization.linux
+    customize: !empty(customization) ? customization : []
     distribute: [
       {
         type: 'SharedImage'
