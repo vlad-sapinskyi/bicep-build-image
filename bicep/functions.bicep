@@ -46,7 +46,9 @@ func combineScript(scriptContent string) string =>
   )
 
 func trimResourceName(res resourceType, name string) string =>
-  (res == 'Gallery') ? replace(name, '-', '_') : name
+    (res == 'Gallery') ? replace(name, '-', '_')
+  : (res == 'StorageAccount') ? replace(name, '-', '')
+  : name
 
 func getLocationShortName(location locationType) string? =>
     (location == 'westeurope') ? 'we'
@@ -55,9 +57,10 @@ func getLocationShortName(location locationType) string? =>
 
 func getResourceShortName(res resourceType) string? =>
     (res == 'ResourceGroup') ? 'rg'
-  :(res == 'NetworkSecurityGroup') ? 'nsg'
+  : (res == 'NetworkSecurityGroup') ? 'nsg'
   : (res == 'VirtualNetwork') ? 'vnet'
   : (res == 'ManagedIdentity') ? 'id'
   : (res == 'Gallery') ? 'gal'
   : (res == 'ImageTemplate') ? 'it'
+  : (res == 'StorageAccount') ? 'sa'
   : null

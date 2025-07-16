@@ -1,5 +1,6 @@
-import { environmentType, locationType, imageDefinitionType, imageActionType } from '../types.bicep'
-import { getResourceName, combineScript } from '../functions.bicep'
+import { environmentType, locationType, imageDefinitionType } from '../types.bicep'
+import { getResourceName } from '../functions.bicep'
+import * as customization from '../customizations.bicep'
 
 param env environmentType
 param location locationType
@@ -7,12 +8,15 @@ param vmSubnetName string
 param containerSubnetName string
 param sourceImageDefinition imageDefinitionType
 param targetImageDefinitionName string
-param imageActions imageActionType[]
 
+var identityName = getResourceName('ManagedIdentity', env, location, null, null)
 var vnetName = getResourceName('VirtualNetwork', env, location, null, null)
 var galleryName = getResourceName('Gallery', env, location, null, null)
-var identityName = getResourceName('ManagedIdentity', env, location, null, null)
 var imageTemplateName = getResourceName('ImageTemplate', env, location, null, null)
+
+resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+  name: identityName
+}
 
 resource vnet 'Microsoft.Network/virtualNetworks@2024-07-01' existing = {
   name: vnetName
@@ -32,10 +36,6 @@ resource gallery 'Microsoft.Compute/galleries@2024-03-03' existing = {
   resource image 'images@2024-03-03' existing = {
     name: targetImageDefinitionName
   }
-}
-
-resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
-  name: identityName
 }
 
 resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2024-02-01' = {
@@ -62,26 +62,7 @@ resource imageTemplate 'Microsoft.VirtualMachineImages/imageTemplates@2024-02-01
       sku: sourceImageDefinition.sku
       version: sourceImageDefinition.version!
     }
-    customize: [
-      for action in imageActions: action.type == 'RunScript'
-        ? sourceImageDefinition.os == 'Windows'
-            ? {
-                type: 'PowerShell'
-                name: action.name
-                inline: [combineScript(action.script!)]
-                runAsSystem: true
-                runElevated: true
-              }
-            : {
-                type: 'Shell'
-                name: action.name
-                inline: [combineScript(action.script!)]
-              }
-        : {
-            type: 'WindowsRestart'
-            name: action.name
-          }
-    ]
+    customize: sourceImageDefinition.os == 'Windows' ? customization.windows : customization.linux
     distribute: [
       {
         type: 'SharedImage'

@@ -18,9 +18,6 @@ process {
     # Set application name
     $appName = 'aib'
 
-    # Set workload name
-    $workloadName = 'builder'
-
     # Set image type
     $imageType = $ImageType.ToLower()
 
@@ -28,7 +25,6 @@ process {
     $envName = $Environment.ToLower()
 
     # Set deployment location name
-    $locationName = $Location.ToLower()
     $locationShortName = 'sdc'
     if ('WestEurope' -eq $Location) {
         $locationShortName = 'we'
@@ -46,13 +42,11 @@ process {
         }
         Write-Host ($account | Format-List | Out-String)
 
-        # Deploy selected workload
-        $deploymentName = "$appName-$workloadName-$envName-$locationShortName"
-        $deploymentTemplateParameterFile = ".\bicep\workloads\$workloadName-$imageType-$envName.bicepparam"
-        $deploymentTemplateFile = ".\bicep\workloads\$workloadName.bicep" 
-        Write-Host "`nDeploying '$workloadName' workload ...`n" -ForegroundColor Green
-        az deployment sub create --name $deploymentName --location $locationName --template-file $deploymentTemplateFile --parameters $deploymentTemplateParameterFile
-
+        # Upload image scripts
+        $saName = "sa$appName$envName$locationShortName".Replace('-', '')
+        Write-Host "`nUploading '$imageType' image scripts to '$imageTemplateName' storage account ...`n" -ForegroundColor Green
+        az storage blob upload-batch --account-name $saName -d "scripts\$imageType-image" --source ".\scripts\$imageType-image"
+        
         Write-Host "`nDone!`n" -ForegroundColor Green
     }
     catch {

@@ -18,9 +18,6 @@ process {
     # Set application name
     $appName = 'aib'
 
-    # Set workload name
-    $workloadName = 'builder'
-
     # Set image type
     $imageType = $ImageType.ToLower()
 
@@ -28,7 +25,6 @@ process {
     $envName = $Environment.ToLower()
 
     # Set deployment location name
-    $locationName = $Location.ToLower()
     $locationShortName = 'sdc'
     if ('WestEurope' -eq $Location) {
         $locationShortName = 'we'
@@ -46,12 +42,11 @@ process {
         }
         Write-Host ($account | Format-List | Out-String)
 
-        # Deploy selected workload
-        $deploymentName = "$appName-$workloadName-$envName-$locationShortName"
-        $deploymentTemplateParameterFile = ".\bicep\workloads\$workloadName-$imageType-$envName.bicepparam"
-        $deploymentTemplateFile = ".\bicep\workloads\$workloadName.bicep" 
-        Write-Host "`nDeploying '$workloadName' workload ...`n" -ForegroundColor Green
-        az deployment sub create --name $deploymentName --location $locationName --template-file $deploymentTemplateFile --parameters $deploymentTemplateParameterFile
+        # Run image template
+        $rgName = "rg-$appName-$envName-$locationShortName"
+        $imageTemplateName = "it-$appName-$envName-$locationShortName"
+        Write-Host "`nRemoving '$imageTemplateName' image template ...`n" -ForegroundColor Green
+        az image builder delete --name $imageTemplateName --resource-group $rgName
 
         Write-Host "`nDone!`n" -ForegroundColor Green
     }
