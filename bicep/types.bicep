@@ -17,6 +17,7 @@ type resourceType =
   | 'ManagedIdentity'
   | 'Gallery'
   | 'ImageTemplate'
+  | 'StorageAccount'
 
 @export()
 type subnetType = {

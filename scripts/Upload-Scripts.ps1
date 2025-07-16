@@ -42,14 +42,11 @@ process {
         }
         Write-Host ($account | Format-List | Out-String)
 
-        # Run image template
-        $rgName = "rg-$appName-$envName-$locationShortName"
-        $imageTemplateName = "it-$appName-$envName-$locationShortName"
-        Write-Host "`nRunning '$imageTemplateName' image template ...`n" -ForegroundColor Green
-        az image builder run --name $imageTemplateName --resource-group $rgName --no-wait
-        az image builder wait --name $imageTemplateName --resource-group $rgName --custom "lastRunStatus.runState!='Running'"
-        az image builder show --name $imageTemplateName --resource-group $rgName
-
+        # Upload image scripts
+        $saName = "sa$appName$envName$locationShortName".Replace('-', '')
+        Write-Host "`nUploading '$imageType' image scripts to '$imageTemplateName' storage account ...`n" -ForegroundColor Green
+        az storage blob upload-batch --account-name $saName -d "scripts\$imageType-image" --source ".\scripts\$imageType-image"
+        
         Write-Host "`nDone!`n" -ForegroundColor Green
     }
     catch {

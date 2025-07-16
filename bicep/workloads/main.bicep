@@ -1,5 +1,6 @@
 targetScope = 'subscription'
 
+import * as const from '../constants.bicep'
 import { environmentType, locationType, subnetType, imageDefinitionType } from '../types.bicep'
 import { getResourceName, getModuleFullName } from '../functions.bicep'
 
@@ -10,16 +11,23 @@ param subnets subnetType[]
 param imageDefinitions imageDefinitionType[]
 
 var rgName = getResourceName('ResourceGroup', env, location, null, null)
-var rgStageName = getResourceName('ResourceGroup', env, location, null, 'stage')
 
 resource rg 'Microsoft.Resources/resourceGroups@2025-04-01' = {
   name: rgName
   location: location
 }
 
-resource rgStage 'Microsoft.Resources/resourceGroups@2025-04-01' = {
-  name: rgStageName
-  location: location
+module identityModule '../modules/identity.bicep' = {
+  name: getModuleFullName('identity', env, location, null)
+  scope: rg
+  params: {
+    env: env
+    location: location
+    roleDefinitionIds: [
+      const.galleryPublisherRoleId
+      const.networkContributorRoleId
+    ]
+  }
 }
 
 module networkModule '../modules/network.bicep' = {
@@ -43,8 +51,8 @@ module galleryModule '../modules/gallery.bicep' = {
   }
 }
 
-module identityModule '../modules/identity.bicep' = {
-  name: getModuleFullName('identity', env, location, null)
+module storageAccountModule '../modules/storage-account.bicep' = {
+  name: getModuleFullName('storage-account', env, location, null)
   scope: rg
   params: {
     env: env

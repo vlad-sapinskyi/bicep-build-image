@@ -11,7 +11,7 @@ param(
 )
 process {
     # Set application name
-    $appName = 'build-image'
+    $appName = 'aib'
 
     # Set workload name
     $workloadName = 'main'

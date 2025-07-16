@@ -45,10 +45,8 @@ process {
         # Run image template
         $rgName = "rg-$appName-$envName-$locationShortName"
         $imageTemplateName = "it-$appName-$envName-$locationShortName"
-        Write-Host "`nRunning '$imageTemplateName' image template ...`n" -ForegroundColor Green
-        az image builder run --name $imageTemplateName --resource-group $rgName --no-wait
-        az image builder wait --name $imageTemplateName --resource-group $rgName --custom "lastRunStatus.runState!='Running'"
-        az image builder show --name $imageTemplateName --resource-group $rgName
+        Write-Host "`nRemoving '$imageTemplateName' image template ...`n" -ForegroundColor Green
+        az image builder delete --name $imageTemplateName --resource-group $rgName
 
         Write-Host "`nDone!`n" -ForegroundColor Green
     }
